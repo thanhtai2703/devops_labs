@@ -40,7 +40,7 @@ resource "aws_internet_gateway" "main" {
 }
 
 # 5. Tạo NAT Gateway
-# NAT Gateway cần một IP Public (Elastic IP) và phải được đặt trong Public Subnet
+# NAT Gateway cần một IP Public (Elastic IP)
 resource "aws_eip" "nat" {
   domain     = "vpc"
   depends_on = [aws_internet_gateway.main] # Đảm bảo IGW có trước
@@ -55,12 +55,11 @@ resource "aws_nat_gateway" "main" {
 }
 
 # 6. Tạo Route Tables
-# Public Route Table: Định tuyến ra Internet Gateway
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block = "0.0.0.0/0" # "0.0.0.0/0" có nghĩa là "tất cả lưu lượng"
+    cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
   }
 
@@ -75,7 +74,7 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Private Route Table: Định tuyến ra NAT Gateway [cite: 21]
+# Private Route Table:
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
@@ -88,30 +87,22 @@ resource "aws_route_table" "private" {
     Name = "${var.project_name}-private-rt"
   }
 }
-
 # Liên kết Private Route Table với Private Subnet
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
 }
-
-# 7. Quản lý Default Security Group
-# Mặc dù bài tập có module SG riêng, nhưng Default SG là một phần của VPC.
+# 7. Default Security Group
 resource "aws_default_security_group" "main" {
   vpc_id = aws_vpc.main.id
-
-  # Thường ta sẽ khoá chặt default SG và không dùng nó
-  # Cho phép tất cả traffic đi ra (egress)
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   # Không cho phép traffic đi vào (ingress)
   ingress = []
-
   tags = {
     Name = "${var.project_name}-default-sg"
   }
