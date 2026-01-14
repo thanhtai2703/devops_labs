@@ -5,8 +5,6 @@ version: 0.2
 
 env:
   variables:
-    CFN_LINT_VERSION: "latest"
-    TASKCAT_VERSION: "0.9.44"
     PYTHON_VERSION: "3.11"
 
 phases:
@@ -16,8 +14,8 @@ phases:
     commands:
       - echo "Installing cfn-lint and taskcat..."
       - pip install --upgrade pip
-      - pip install cfn-lint==${CFN_LINT_VERSION}
-      - pip install taskcat==${TASKCAT_VERSION}
+      - pip install cfn-lint
+      - pip install taskcat
       - echo "Checking installed versions..."
       - cfn-lint --version
       - taskcat --version
