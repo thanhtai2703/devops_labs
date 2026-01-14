@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Tên dự án, sẽ được dùng để đặt tên (tag) cho tài nguyên"
   type        = string
-  default     = "23521380-testing"
+  default     = "nhom03"
 }
 
 variable "vpc_cidr" {
