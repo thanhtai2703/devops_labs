@@ -28,10 +28,10 @@ resource "aws_security_group" "private_ec2_sg" {
 
   #  phép SSH chỉ từ Public EC2 SG
   ingress {
-    description     = "SSH from Public EC2 SG"
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
+    description = "SSH from Public EC2 SG"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     # Chỉ cho phép kết nối đến từ các EC2 thuộc Public SG
     security_groups = [aws_security_group.public_ec2_sg.id]
   }
