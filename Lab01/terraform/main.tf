@@ -7,15 +7,15 @@ terraform {
   }
 }
 provider "aws" {
-  region = "us-east-1" 
+  region = "us-east-1"
 }
 module "vpc" {
   source = "./modules/vpc" # Đường dẫn đến module vpc
 }
 module "security_groups" {
-  source      = "./modules/security_groups" # Đường dẫn đến module security_groups
-  vpc_id      = module.vpc.vpc_id
-  user_ip     = var.user_ip
+  source  = "./modules/security_groups" # Đường dẫn đến module security_groups
+  vpc_id  = module.vpc.vpc_id
+  user_ip = var.user_ip
 }
 module "ec2" {
   source            = "./modules/ec2" # Đường dẫn đến module ec2

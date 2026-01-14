@@ -1,0 +1,10 @@
+# Terraform Variables Example
+# Copy file này thành terraform.tfvars và điền thông tin của bạn
+
+# IP của máy tính bạn (thêm /32 ở cuối)
+# Tìm IP bằng cách Google "my ip"
+user_ip = "YOUR_IP_HERE/32"  # Ví dụ: "123.45.67.89/32"
+
+# Tên của Key Pair đã tạo trên AWS EC2
+# Tạo key pair tại: AWS Console > EC2 > Key Pairs
+key_name = "YOUR_KEY_PAIR_NAME"  # Ví dụ: "my-ec2-key"

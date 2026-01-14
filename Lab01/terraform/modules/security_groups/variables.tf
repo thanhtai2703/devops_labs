@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Tên dự án để tag"
   type        = string
-  default     = "23521380-testing"
+  default     = "nhom03"
 }
 
 variable "vpc_id" {
