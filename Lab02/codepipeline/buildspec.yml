@@ -23,8 +23,10 @@ phases:
   pre_build:
     commands:
       - echo "Pre-build phase started on $(date)"
+      - echo "Current directory:"
+      - pwd
       - echo "Listing CloudFormation templates..."
-      - find ../Lab01/cloudformation -name "*.yaml" -o -name "*.yml"
+      - find Lab01/cloudformation -name "*.yaml" -o -name "*.yml"
 
   build:
     commands:
@@ -35,7 +37,7 @@ phases:
       
       # Run cfn-lint on all CloudFormation templates
       - |
-        if cfn-lint ../Lab01/cloudformation/**/*.yaml; then
+        if cfn-lint Lab01/cloudformation/**/*.yaml; then
           echo "✅ cfn-lint validation PASSED"
         else
           echo "❌ cfn-lint validation FAILED"
