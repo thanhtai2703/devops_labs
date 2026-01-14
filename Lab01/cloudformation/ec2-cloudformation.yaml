@@ -1,7 +1,6 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: |
   Security Groups cho EC2 Instances trong VPC đã tạo'
-
 #INPUT
 Parameters:
   UserIP:
@@ -10,10 +9,8 @@ Parameters:
   KeyPairName:
     Type: String
     Description: Tên của Key Pair để gán cho EC2 Instances
-
-
 Resources:
-#Security Groups
+  #Security Groups
   #Public SG
   PublicSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -48,7 +45,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: !Ref KeyPairName
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64}}'
+      ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64}}"
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
@@ -64,7 +61,7 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: !Ref KeyPairName
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64}}'
+      ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64}}"
       NetworkInterfaces:
         - AssociatePublicIpAddress: false
           DeviceIndex: 0
@@ -74,7 +71,6 @@ Resources:
       Tags:
         - Key: Name
           Value: cf-private-ec2
-
 Outputs:
   PublicEC2IP:
     Description: IP Public của máy chủ Public
