@@ -1,0 +1,46 @@
+# cfn-lint configuration file
+# https://github.com/aws-cloudformation/cfn-lint
+
+# Regions to validate against
+# Templates will be checked for compatibility with these regions
+regions:
+  - us-east-1
+  - us-west-2
+  - ap-southeast-1
+
+# Rules to ignore (uncomment to skip specific checks)
+ignore_checks:
+  # - W2001  # Parameter not used - common in nested stacks
+  # - W3002  # Unreachable code in condition
+  # - E3001  # Property not valid for resource
+  
+# Rules to include (leave empty to include all)
+include_checks:
+  []
+
+# Configure specific rule settings
+configure_rules:
+  # Example: Allow specific instance types
+  # E3012:
+  #   strict: false
+
+# Append rules directory (for custom rules)
+# append_rules:
+  # - /path/to/custom/rules
+
+# Override spec file
+# override_spec: /path/to/custom/spec.json
+
+# Include experimental rules
+include_experimental: false
+
+# Mandatory checks (will cause build to fail)
+mandatory_checks:
+  []
+
+# Template parameters to validate
+# parameters:
+#   MyParameter: MyValue
+
+# Exit with non-zero code for warnings
+ignore_bad_template: false

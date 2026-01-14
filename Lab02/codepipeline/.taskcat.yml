@@ -1,0 +1,68 @@
+project:
+  name: cfn-infrastructure-test
+  owner: devops-team
+  regions:
+    - us-east-1
+  # Optional: S3 bucket for storing test artifacts
+  # s3_bucket: my-taskcat-test-bucket
+
+tests:
+  # Test 1: VPC Module standalone test
+  vpc-module-test:
+    template: ../Lab01/cloudformation/modules/vpc.yaml
+    regions:
+      - us-east-1
+    parameters:
+      ProjectName: taskcat-vpc-test
+      VpcCidr: 192.168.0.0/16
+      PublicSubnetCidr: 192.168.1.0/24
+      PrivateSubnetCidr: 192.168.2.0/24
+
+  # Test 2: Security Groups Module (requires VPC)
+  # Note: This test requires manual setup or use nested stack test instead
+  # security-groups-test:
+  #   template: ../Lab01/cloudformation/modules/security-groups.yaml
+  #   regions:
+  #     - us-east-1
+  #   parameters:
+  #     ProjectName: taskcat-sg-test
+  #     VpcId: $[taskcat_autobucket]
+  #     UserIP: 0.0.0.0/0
+
+  # Test 3: Full nested stack deployment
+  nested-stack-test:
+    template: ../Lab01/cloudformation/main.yaml
+    regions:
+      - us-east-1
+    parameters:
+      ProjectName: taskcat-full-test
+      UserIP: 0.0.0.0/0  # IMPORTANT: Change this to your IP in production
+      KeyPairName: $[taskcat_genkeypair]  # Auto-generate key pair for testing
+      TemplatesBucketURL: $[taskcat_autobucket]  # Auto-create S3 bucket
+      VpcCidr: 10.10.0.0/16
+      PublicSubnetCidr: 10.10.1.0/24
+      PrivateSubnetCidr: 10.10.2.0/24
+
+# General settings
+general:
+  # Automatically generate a unique S3 bucket for nested templates
+  s3_bucket: auto
+  
+  # Parameters that apply to all tests
+  parameters:
+    # Add any common parameters here
+    
+  # Tags to apply to all resources
+  tags:
+    Environment: testing
+    ManagedBy: taskcat
+    
+  # Authentication (uses default AWS profile if not specified)
+  # auth:
+  #   default: default-profile
+  
+  # Cleanup after tests (set to true to keep resources for debugging)
+  dont-cleanup-stack: false
+  
+  # Logging level
+  verbose: true
