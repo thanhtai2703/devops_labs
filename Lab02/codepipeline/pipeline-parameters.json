@@ -1,0 +1,27 @@
+
+[
+  {
+    "ParameterKey": "RepositoryName",
+    "ParameterValue": "cfn-infrastructure-repo"
+  },
+  {
+    "ParameterKey": "ProjectName",
+    "ParameterValue": "cfn-pipeline"
+  },
+  {
+    "ParameterKey": "BranchName",
+    "ParameterValue": "main"
+  },
+  {
+    "ParameterKey": "UserIP",
+    "ParameterValue": "YOUR_IP_HERE/32"
+  },
+  {
+    "ParameterKey": "KeyPairName",
+    "ParameterValue": "YOUR_KEY_PAIR_NAME"
+  },
+  {
+    "ParameterKey": "S3BucketName",
+    "ParameterValue": "your-unique-cfn-templates-bucket-name"
+  }
+]

@@ -1,0 +1,332 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  AWS CodePipeline infrastructure for CloudFormation CI/CD
+  Creates CodeCommit repository, CodeBuild project, and CodePipeline
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Default: cfn-infrastructure-repo
+    Description: Name of the CodeCommit repository
+    
+  ProjectName:
+    Type: String
+    Default: cfn-pipeline
+    Description: Project name for resource tagging
+    
+  BranchName:
+    Type: String
+    Default: main
+    Description: Git branch to monitor for changes
+    
+  UserIP:
+    Type: String
+    Description: Your IP address for SSH access to deployed EC2 (e.g., 1.2.3.4/32)
+    
+  KeyPairName:
+    Type: String
+    Description: EC2 Key Pair name for deployed instances
+    
+  S3BucketName:
+    Type: String
+    Description: S3 bucket name for storing nested CloudFormation templates
+    AllowedPattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+    ConstraintDescription: Bucket name must be lowercase, alphanumeric, and hyphens only
+
+Resources:
+  # ==========================================
+  # S3 BUCKET for CloudFormation Templates
+  # ==========================================
+  TemplatesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-templates-bucket
+
+  # ==========================================
+  # CODECOMMIT REPOSITORY
+  # ==========================================
+  CodeRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      RepositoryDescription: CloudFormation infrastructure templates repository
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-repository
+
+  # ==========================================
+  # CODEBUILD PROJECT
+  # ==========================================
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
+                  - !Sub arn:aws:s3:::${TemplatesBucket}/*
+
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${ProjectName}-build
+      Description: Validate and test CloudFormation templates
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: false
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      TimeoutInMinutes: 30
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-build
+
+  # ==========================================
+  # CODEPIPELINE
+  # ==========================================
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-artifacts
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${ArtifactBucket}
+                  - !Sub arn:aws:s3:::${ArtifactBucket}/*
+                  - !Sub arn:aws:s3:::${TemplatesBucket}
+                  - !Sub arn:aws:s3:::${TemplatesBucket}/*
+              - Effect: Allow
+                Action:
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:UploadArchive
+                  - codecommit:GetUploadArchiveStatus
+                Resource: !GetAtt CodeRepository.Arn
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: !GetAtt BuildProject.Arn
+              - Effect: Allow
+                Action:
+                  - cloudformation:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !GetAtt CloudFormationRole.Arn
+
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+      Policies:
+        - PolicyName: IAMPassRolePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                  - iam:GetRole
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRolePolicy
+                Resource: '*'
+        - PolicyName: S3TemplatesAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${TemplatesBucket}
+                  - !Sub arn:aws:s3:::${TemplatesBucket}/*
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub ${ProjectName}-pipeline
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucket
+      Stages:
+        # STAGE 1: Source from CodeCommit
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: '1'
+              Configuration:
+                RepositoryName: !GetAtt CodeRepository.Name
+                BranchName: !Ref BranchName
+                PollForSourceChanges: true
+              OutputArtifacts:
+                - Name: SourceOutput
+
+        # STAGE 2: Build - cfn-lint and Taskcat
+        - Name: Build
+          Actions:
+            - Name: ValidateAndTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref BuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+
+        # STAGE 3: Upload templates to S3
+        - Name: UploadTemplates
+          Actions:
+            - Name: UploadToS3
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: S3
+                Version: '1'
+              Configuration:
+                BucketName: !Ref TemplatesBucket
+                Extract: true
+                ObjectKey: templates
+              InputArtifacts:
+                - Name: SourceOutput
+
+        # STAGE 4: Deploy CloudFormation Stack
+        - Name: Deploy
+          Actions:
+            - Name: DeployStack
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                StackName: !Sub ${ProjectName}-infrastructure
+                TemplatePath: SourceOutput::Lab01/cloudformation/main.yaml
+                Capabilities: CAPABILITY_IAM
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                ParameterOverrides: !Sub |
+                  {
+                    "ProjectName": "${ProjectName}",
+                    "UserIP": "${UserIP}",
+                    "KeyPairName": "${KeyPairName}",
+                    "TemplatesBucketURL": "https://${TemplatesBucket}.s3.amazonaws.com/templates/Lab01/cloudformation",
+                    "VpcCidr": "10.0.0.0/16",
+                    "PublicSubnetCidr": "10.0.1.0/24",
+                    "PrivateSubnetCidr": "10.0.2.0/24"
+                  }
+              InputArtifacts:
+                - Name: SourceOutput
+
+Outputs:
+  RepositoryCloneUrlHttp:
+    Description: CodeCommit repository clone URL (HTTPS)
+    Value: !GetAtt CodeRepository.CloneUrlHttp
+    
+  RepositoryCloneUrlSsh:
+    Description: CodeCommit repository clone URL (SSH)
+    Value: !GetAtt CodeRepository.CloneUrlSsh
+    
+  PipelineUrl:
+    Description: CodePipeline console URL
+    Value: !Sub https://console.aws.amazon.com/codesuite/codepipeline/pipelines/${Pipeline}/view
+    
+  BuildProjectName:
+    Description: CodeBuild project name
+    Value: !Ref BuildProject
+    
+  TemplatesBucketName:
+    Description: S3 bucket for CloudFormation templates
+    Value: !Ref TemplatesBucket
