@@ -113,7 +113,7 @@ Resources:
         PrivilegedMode: false
       Source:
         Type: CODEPIPELINE
-        BuildSpec: Lab02/codepipeline/buildspec.yml
+        BuildSpec: buildspec.yml
       TimeoutInMinutes: 30
       Tags:
         - Key: Name
@@ -212,6 +212,18 @@ Resources:
                   - iam:DeleteRolePolicy
                   - iam:GetRolePolicy
                 Resource: '*'
+        - PolicyName: S3TemplatesAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${TemplatesBucket}
+                  - !Sub arn:aws:s3:::${TemplatesBucket}/*
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -290,7 +302,7 @@ Resources:
                     "ProjectName": "${ProjectName}",
                     "UserIP": "${UserIP}",
                     "KeyPairName": "${KeyPairName}",
-                    "TemplatesBucketURL": "https://${TemplatesBucket}.s3.amazonaws.com/templates",
+                    "TemplatesBucketURL": "https://${TemplatesBucket}.s3.amazonaws.com/templates/Lab01/cloudformation",
                     "VpcCidr": "10.0.0.0/16",
                     "PublicSubnetCidr": "10.0.1.0/24",
                     "PrivateSubnetCidr": "10.0.2.0/24"

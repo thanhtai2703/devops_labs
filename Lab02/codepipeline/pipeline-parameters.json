@@ -22,6 +22,6 @@
   },
   {
     "ParameterKey": "S3BucketName",
-    "ParameterValue": "your-unique-cfn-templates-bucket-123"
+    "ParameterValue": "your-unique-cfn-templates-bucket-name"
   }
 ]
