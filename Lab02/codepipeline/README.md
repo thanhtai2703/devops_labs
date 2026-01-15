@@ -12,14 +12,10 @@ Lab02/codepipeline/
 ├── deploy-pipeline.sh               # Bash deployment script
 ├── push-to-codecommit.ps1          # Script to push code to CodeCommit
 ├── monitor-pipeline.ps1            # Pipeline monitoring script
-└── cfn-infrastructure-repo/        # Repository content to be pushed
-    ├── buildspec.yml               # CodeBuild build specification
-    └── Lab01/cloudformation/       # CloudFormation templates
-        ├── main.yaml               # Main orchestration stack
-        └── modules/                # Nested stack modules
-            ├── vpc.yaml            # VPC infrastructure
-            ├── security-groups.yaml # Security groups
-            └── ec2.yaml            # EC2 instances
+└── README.md                        # This file
+
+Note: CloudFormation templates are in ../Lab01/cloudformation/
+      and will be pushed to CodeCommit during deployment
 ```
 
 ## 🚀 Deployment Steps
@@ -66,15 +62,23 @@ This creates:
 
 ### 3. Push Code to CodeCommit
 
+**Note:** The code is already in CodeCommit from initial setup. To make changes:
+
 ```powershell
-.\push-to-codecommit.ps1
+# Clone repository from CodeCommit
+git clone https://git-codecommit.us-east-1.amazonaws.com/v1/repos/cfn-infrastructure-repo
+
+# Make changes
+cd cfn-infrastructure-repo
+# Edit files...
+
+# Push changes
+git add .
+git commit -m "Your changes"
+git push origin main
 ```
 
-This will:
-- Initialize Git in cfn-infrastructure-repo
-- Commit all CloudFormation templates
-- Push to CodeCommit repository
-- Automatically trigger the pipeline
+This will automatically trigger the pipeline.
 
 ### 4. Monitor Pipeline Execution
 
@@ -141,11 +145,17 @@ aws ec2 describe-instances --filters "Name=tag:Name,Values=cfn-pipeline-*"
 ### SSH to Public EC2
 ```powershell
 # Get public IP
-$publicIp = aws cloudformation describe-stacks --stack-name cfn-pipeline-infrastructure --query 'Stacks[0].Outputs[?OutputKey==`PublicEC2IP`].OutputValue' --output text
+$publicIp = aws cloudfor:
 
-# SSH
-ssh -i YOUR_KEY.pem ec2-user@$publicIp
+1. Clone repository from CodeCommit (if not already cloned):
+```powershell
+git clone https://git-codecommit.us-east-1.amazonaws.com/v1/repos/cfn-infrastructure-repo
+cd cfn-infrastructure-repo
 ```
+
+2. Make changes to templates and push:
+```powershell
+# Edit templates in Lab01/cloudformation/
 
 ## 🔄 Update Infrastructure
 
