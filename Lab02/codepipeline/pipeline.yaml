@@ -294,7 +294,7 @@ Resources:
               Configuration:
                 ActionMode: CREATE_UPDATE
                 StackName: !Sub ${ProjectName}-infrastructure
-                TemplatePath: SourceOutput::Lab01/cloudformation/main.yaml
+                TemplatePath: SourceOutput::cloudformation/main.yaml
                 Capabilities: CAPABILITY_IAM
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 ParameterOverrides: !Sub |
@@ -302,7 +302,7 @@ Resources:
                     "ProjectName": "${ProjectName}",
                     "UserIP": "${UserIP}",
                     "KeyPairName": "${KeyPairName}",
-                    "TemplatesBucketURL": "https://${TemplatesBucket}.s3.amazonaws.com/templates/Lab01/cloudformation",
+                    "TemplatesBucketURL": "https://${TemplatesBucket}.s3.amazonaws.com/templates/cloudformation",
                     "VpcCidr": "10.0.0.0/16",
                     "PublicSubnetCidr": "10.0.1.0/24",
                     "PrivateSubnetCidr": "10.0.2.0/24"

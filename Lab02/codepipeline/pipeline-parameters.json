@@ -18,10 +18,10 @@
   },
   {
     "ParameterKey": "KeyPairName",
-    "ParameterValue": "YOUR_KEY_PAIR_NAME"
+    "ParameterValue": "YOUR_KEYPAIR_HERE"
   },
   {
     "ParameterKey": "S3BucketName",
-    "ParameterValue": "your-unique-cfn-templates-bucket-name"
+    "ParameterValue": "your-unique-bucket-name-here"
   }
 ]
