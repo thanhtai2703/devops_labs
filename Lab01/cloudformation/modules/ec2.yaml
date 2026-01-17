@@ -34,7 +34,6 @@ Resources:
     Properties:
       InstanceType: t2.micro
       KeyName: !Ref KeyName
-      # Get latest Amazon Linux 2023 AMI dynamically
       ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64}}"
       NetworkInterfaces:
         - AssociatePublicIpAddress: true

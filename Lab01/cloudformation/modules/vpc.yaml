@@ -60,8 +60,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-igw
-
-  # Attach IGW to VPC
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -69,7 +67,6 @@ Resources:
       InternetGatewayId: !Ref MainIGW
 
   # 5. CREATE NAT GATEWAY
-  # Need Elastic IP first
   NatEIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -93,7 +90,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-public-rt
-
   # Route 0.0.0.0/0 to IGW
   PublicRoute:
     Type: AWS::EC2::Route
@@ -101,14 +97,12 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref MainIGW
-
   # Associate Public RT with Public Subnet
   PublicSubnetAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
-
   # 7. CREATE PRIVATE ROUTE TABLE
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -117,7 +111,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-private-rt
-
   # Route 0.0.0.0/0 to NAT Gateway
   PrivateRoute:
     Type: AWS::EC2::Route
@@ -125,7 +118,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref MainNGW
-
   # Associate Private RT with Private Subnet
   PrivateSubnetAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
