@@ -1,0 +1,6 @@
+
+# Lab02 CodeCommit local repository
+Lab02/codepipeline/cfn-infrastructure-repo/
+
+# Taskcat outputs
+taskcat_outputs/
