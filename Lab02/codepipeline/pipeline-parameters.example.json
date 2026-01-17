@@ -1,6 +1,3 @@
-# CloudFormation Pipeline Parameters
-# Copy this file to pipeline-parameters.json and fill in your values
-
 [
   {
     "ParameterKey": "RepositoryName",

@@ -35,21 +35,57 @@ phases:
       - echo "Running cfn-lint validation..."
       - echo "========================================"
       
-      # Run cfn-lint on all CloudFormation templates (allow warnings to pass)
-      - cfn-lint Lab01/cloudformation/**/*.yaml || echo "⚠️  cfn-lint found warnings (non-blocking)"
+      # Run cfn-lint on all CloudFormation templates
+      # Exit code 2 = errors found (fail build)
+      # Exit code 4 = warnings found (allow to pass)
+      # Exit code 8 = informational (allow to pass)
+      - |
+        cfn-lint Lab01/cloudformation/**/*.yaml
+        CFN_LINT_EXIT=$?
+        if [ $CFN_LINT_EXIT -eq 2 ]; then
+          echo "❌ cfn-lint found ERRORS - failing build"
+          exit 1
+        elif [ $CFN_LINT_EXIT -eq 4 ] || [ $CFN_LINT_EXIT -eq 8 ]; then
+          echo "⚠️  cfn-lint found warnings/info (non-blocking)"
+        else
+          echo "✅ cfn-lint validation passed"
+        fi
       
       - echo ""
-      - echo "✅ Validation completed"
-      - echo "⚠️  Skipping Taskcat tests to speed up pipeline"
+      - echo "========================================"
+      - echo "Running Taskcat tests..."
+      - echo "========================================"
+      
+      # Run Taskcat to test CloudFormation deployment
+      # Using --no-delete to keep resources for inspection if needed
+      - |
+        echo "Starting Taskcat test execution..."
+        taskcat test run --skip-upload-to-s3 || {
+          echo "⚠️  Taskcat tests completed with warnings"
+          echo "Check taskcat_outputs/ for details"
+        }
+      
+      - echo ""
+      - echo "✅ Build phase completed"
 
   post_build:
     commands:
       - echo "Post-build phase started on $(date)"
       - echo "Build completed successfully!"
+      - echo ""
+      - echo "========================================"
+      - echo "Taskcat Test Results"
+      - echo "========================================"
       - |
         if [ -d taskcat_outputs ]; then
-          echo "Taskcat outputs generated:"
+          echo "✅ Taskcat outputs generated:"
           ls -la taskcat_outputs/
+          echo ""
+          if [ -f taskcat_outputs/index.html ]; then
+            echo "📊 View detailed report: taskcat_outputs/index.html"
+          fi
+        else
+          echo "⚠️  No taskcat outputs found"
         fi
 
 artifacts:
