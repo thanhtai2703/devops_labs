@@ -1,5 +1,4 @@
-name: 'Terraform CI/CD Pipeline'
-
+name: "Terraform CI/CD Pipeline"
 on:
   push:
     branches:
@@ -13,46 +12,39 @@ permissions:
   pull-requests: write
   issues: write
 env:
-  TF_VERSION: '1.6.0'
-  AWS_REGION: 'us-east-1'
-  TERRAFORM_DIR: './Lab01/terraform'
+  TF_VERSION: "1.6.0"
+  AWS_REGION: "us-east-1"
+  TERRAFORM_DIR: "./Lab01/terraform"
 
 jobs:
   # Job 1: Terraform Validate & Format Check
   terraform-validate:
-    name: 'Validate Terraform Code'
+    name: "Validate Terraform Code"
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-
       - name: Terraform Init & Validate
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
           terraform init -backend=false
           terraform validate
-
   # Job 2: Checkov Security Scan
   checkov-scan:
-    name: 'Security Scan with Checkov'
+    name: "Security Scan with Checkov"
     runs-on: ubuntu-latest
     needs: terraform-validate
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-
+          python-version: "3.11"
       - name: Run Checkov
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
@@ -61,7 +53,7 @@ jobs:
 
   # Job 3: Terraform Plan
   terraform-plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
     needs: [terraform-validate, checkov-scan]
     env:
@@ -71,16 +63,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-
       - name: Terraform Init
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform init
-
       - name: Terraform Plan
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
@@ -90,7 +79,7 @@ jobs:
 
   # Job 4: Terraform Apply (only on push to main)
   terraform-apply:
-    name: 'Terraform Apply'
+    name: "Terraform Apply"
     runs-on: ubuntu-latest
     needs: [terraform-validate, checkov-scan, terraform-plan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -104,16 +93,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-
       - name: Terraform Init
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform init
-
       - name: Terraform Apply
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
@@ -121,7 +107,6 @@ jobs:
             -var="user_ip=${{ secrets.TF_VAR_user_ip }}" \
             -var="key_name=${{ secrets.TF_VAR_key_name }}" \
             -auto-approve
-
       - name: Terraform Output
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
